@@ -1,0 +1,55 @@
+version: "3"
+
+vars:
+  ENV_FILE: "../.env"
+  ENV_EXAMPLE: "../.env.example"
+
+tasks:
+  default:
+    desc: "Show available tasks"
+    silent: true
+    cmds:
+      - task --list
+
+  setup:
+    desc: "First-time setup — install deps and create .env from example"
+    cmds:
+      - |
+        if [ ! -f {{.ENV_FILE}} ]; then
+          cp {{.ENV_EXAMPLE}} {{.ENV_FILE}}
+          echo "Created {{.ENV_FILE}} — fill in CYVL_EMAIL and CYVL_PASSWORD"
+        else
+          echo "{{.ENV_FILE}} already exists — skipping copy"
+        fi
+      - npm install
+    silent: false
+
+  install:
+    desc: "Install npm dependencies"
+    cmds:
+      - npm install
+
+  start:
+    desc: "Start the Cyvl API Explorer (reads ../.env)"
+    cmds:
+      - npm start
+
+  dev:
+    desc: "Start with file-watch auto-reload (reads ../.env)"
+    cmds:
+      - npm run dev
+
+  check-env:
+    desc: "Verify .env is configured"
+    silent: true
+    cmds:
+      - |
+        if [ ! -f {{.ENV_FILE}} ]; then
+          echo "ERROR: {{.ENV_FILE}} not found. Run: task setup"
+          exit 1
+        fi
+        if ! grep -q "CYVL_EMAIL=." {{.ENV_FILE}} || ! grep -q "CYVL_PASSWORD=." {{.ENV_FILE}}; then
+          echo "ERROR: CYVL_EMAIL or CYVL_PASSWORD not set in {{.ENV_FILE}}"
+          exit 1
+        fi
+        echo "ENV OK"
